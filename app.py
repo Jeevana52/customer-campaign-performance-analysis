@@ -7,7 +7,6 @@ app = Flask(__name__)
 
 @app.route("/")
 def dashboard():
-
     df = pd.read_csv("data/bank.csv", sep=";")
     df.columns = df.columns.str.lower()
 
