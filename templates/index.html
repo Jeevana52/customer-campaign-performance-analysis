@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Campaign Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<h1>📊 Customer Campaign Performance Dashboard</h1>
+
+<div class="cards">
+    <div class="card">Total Customers<br>{{ total_customers }}</div>
+    <div class="card">Positive Responses<br>{{ total_yes }}</div>
+    <div class="card">Negative Responses<br>{{ total_no }}</div>
+    <div class="card">Response Rate<br>{{ response_rate }}%</div>
+</div>
+
+<div id="chart"></div>
+
+<script>
+    var graphs = {{ graphJSON | safe }};
+    Plotly.newPlot('chart', graphs.data, graphs.layout);
+</script>
+
+</body>
+</html>
