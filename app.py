@@ -2,6 +2,7 @@ from flask import Flask, render_template
 import pandas as pd
 import plotly.express as px
 import plotly
+import json
 
 app = Flask(__name__)
 
@@ -11,6 +12,12 @@ def dashboard():
     df.columns = df.columns.str.lower()
 
     summary = df.groupby("job")["y"].value_counts().unstack().fillna(0)
+
+    if "yes" not in summary.columns:
+        summary["yes"] = 0
+    if "no" not in summary.columns:
+        summary["no"] = 0
+
     summary["response_rate"] = summary["yes"] / (summary["yes"] + summary["no"])
     summary = summary.sort_values("response_rate", ascending=False)
 
@@ -23,11 +30,10 @@ def dashboard():
         summary.head(10),
         x=summary.head(10).index,
         y="response_rate",
-        color="response_rate",
-        title="Top Response Segments"
+        title="Top Customer Response Segments"
     )
 
-    graphJSON = plotly.io.to_json(fig)
+    graphJSON = json.loads(plotly.io.to_json(fig))
 
     return render_template(
         "index.html",
