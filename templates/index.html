@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Customer Campaign Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">CC</div>
+      <div class="logo-text">
+        <span class="logo-title">Campaign</span>
+        <span class="logo-sub">Analytics</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="#overview" class="nav-item active">Overview</a>
+      <a href="#profession" class="nav-item">By Profession</a>
+      <a href="#trends" class="nav-item">Trends</a>
+      <a href="#demographics" class="nav-item">Demographics</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="dataset-badge">Portuguese Bank Dataset</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Campaign Performance</h1>
+        <p class="page-sub">Term deposit subscription analysis</p>
+      </div>
+      <div class="header-rate">
+        <span class="rate-num">{{ rate }}%</span>
+        <span class="rate-label">conversion rate</span>
+      </div>
+    </header>
+
+    <!-- KPI CARDS -->
+    <section id="overview" class="kpi-grid">
+      <div class="kpi-card kpi-total">
+        <div class="kpi-label">Total Customers</div>
+        <div class="kpi-value">{{ total }}</div>
+        <div class="kpi-bar"><div class="kpi-fill" style="width:100%"></div></div>
+      </div>
+      <div class="kpi-card kpi-yes">
+        <div class="kpi-label">Subscribed (Yes)</div>
+        <div class="kpi-value">{{ yes_count }}</div>
+        <div class="kpi-bar"><div class="kpi-fill" style="width:{{ rate }}%"></div></div>
+      </div>
+      <div class="kpi-card kpi-no">
+        <div class="kpi-label">Declined (No)</div>
+        <div class="kpi-value">{{ no_count }}</div>
+        <div class="kpi-bar"><div class="kpi-fill" style="width:{{ 100 - rate }}%"></div></div>
+      </div>
+      <div class="kpi-card kpi-rate">
+        <div class="kpi-label">Response Rate</div>
+        <div class="kpi-value">{{ rate }}<span class="kpi-unit">%</span></div>
+        <div class="kpi-bar"><div class="kpi-fill" style="width:{{ rate }}%"></div></div>
+      </div>
+    </section>
+
+    <!-- ROW: Outcome Donut + Contact Type -->
+    <section class="charts-row">
+      <div class="chart-card" id="profession">
+        <div class="chart-header">
+          <h2 class="chart-title">Campaign Outcome</h2>
+          <span class="chart-badge">overall split</span>
+        </div>
+        <div class="donut-wrap">
+          <canvas id="donutChart"></canvas>
+          <div class="donut-center">
+            <div class="dc-num">{{ rate }}%</div>
+            <div class="dc-label">yes rate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">Contact Type</h2>
+          <span class="chart-badge">response rate %</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="contactChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profession Bar Chart -->
+    <section class="chart-card wide" id="profession-chart">
+      <div class="chart-header">
+        <h2 class="chart-title">Response Rate by Profession</h2>
+        <span class="chart-badge">% subscribed per job</span>
+      </div>
+      <div class="chart-wrap tall">
+        <canvas id="profChart"></canvas>
+      </div>
+    </section>
+
+    <!-- ROW: Month trend + Age -->
+    <section class="charts-row" id="trends">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">Monthly Trend</h2>
+          <span class="chart-badge">response rate %</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="monthChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card" id="demographics">
+        <div class="chart-header">
+          <h2 class="chart-title">Age Group Analysis</h2>
+          <span class="chart-badge">response rate %</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="ageChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  const profData    = {{ prof_data | safe }};
+  const contactData = {{ contact_data | safe }};
+  const monthData   = {{ month_data | safe }};
+  const ageData     = {{ age_data | safe }};
+  const yesCount    = {{ yes_count | replace(",","") }};
+  const noCount     = {{ no_count | replace(",","") }};
+
+  Chart.defaults.font.family = "'DM Sans', sans-serif";
+  Chart.defaults.color = "#8a9bb0";
+
+  const accent  = "#4ade80";
+  const accent2 = "#38bdf8";
+  const accent3 = "#f472b6";
+  const muted   = "#1e2d3d";
+  const grid    = "rgba(255,255,255,0.05)";
+
+  // --- Donut ---
+  new Chart(document.getElementById("donutChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Subscribed", "Declined"],
+      datasets: [{
+        data: [yesCount, noCount],
+        backgroundColor: [accent, "#1e3a4a"],
+        borderColor: ["#0f1c26","#0f1c26"],
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      cutout: "72%",
+      plugins: {
+        legend: { position: "bottom", labels: { padding: 20, usePointStyle: true, pointStyleWidth: 10 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toLocaleString()}` } }
+      }
+    }
+  });
+
+  // --- Contact Type ---
+  if (contactData.labels && contactData.labels.length) {
+    new Chart(document.getElementById("contactChart"), {
+      type: "bar",
+      data: {
+        labels: contactData.labels,
+        datasets: [{
+          label: "Response Rate %",
+          data: contactData.rates,
+          backgroundColor: [accent2, accent3, accent],
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: grid }, ticks: { color: "#8a9bb0" } },
+          y: { grid: { color: grid }, ticks: { color: "#8a9bb0", callback: v => v + "%" }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // --- Profession Bar ---
+  if (profData.labels && profData.labels.length) {
+    const sorted = profData.labels
+      .map((l, i) => ({ label: l, rate: profData.rates[i] }))
+      .sort((a, b) => b.rate - a.rate);
+
+    new Chart(document.getElementById("profChart"), {
+      type: "bar",
+      data: {
+        labels: sorted.map(d => d.label),
+        datasets: [{
+          label: "Response Rate %",
+          data: sorted.map(d => d.rate),
+          backgroundColor: sorted.map((_, i) => `hsla(${150 + i * 18}, 70%, 55%, 0.85)`),
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: "y",
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: grid }, ticks: { color: "#8a9bb0", callback: v => v + "%" }, beginAtZero: true },
+          y: { grid: { display: false }, ticks: { color: "#c0cfe0" } }
+        }
+      }
+    });
+  }
+
+  // --- Month Trend Line ---
+  if (monthData.labels && monthData.labels.length) {
+    new Chart(document.getElementById("monthChart"), {
+      type: "line",
+      data: {
+        labels: monthData.labels,
+        datasets: [{
+          label: "Response Rate %",
+          data: monthData.rates,
+          borderColor: accent,
+          backgroundColor: "rgba(74,222,128,0.08)",
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: accent,
+          pointRadius: 4,
+          pointHoverRadius: 7
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: grid }, ticks: { color: "#8a9bb0" } },
+          y: { grid: { color: grid }, ticks: { color: "#8a9bb0", callback: v => v + "%" }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // --- Age Group ---
+  if (ageData.labels && ageData.labels.length) {
+    new Chart(document.getElementById("ageChart"), {
+      type: "bar",
+      data: {
+        labels: ageData.labels,
+        datasets: [{
+          label: "Response Rate %",
+          data: ageData.rates,
+          backgroundColor: ageData.labels.map((_, i) =>
+            `hsla(${200 + i * 20}, 80%, 60%, 0.8)`),
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#8a9bb0" } },
+          y: { grid: { color: grid }, ticks: { color: "#8a9bb0", callback: v => v + "%" }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  // Smooth scroll nav
+  document.querySelectorAll('.nav-item').forEach(a => {
+    a.addEventListener('click', e => {
+      document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
