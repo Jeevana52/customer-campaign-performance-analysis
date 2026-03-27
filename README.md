@@ -2,35 +2,39 @@
 
 An interactive analytics dashboard built using Flask, Plotly, HTML, CSS, and SQL to analyze customer engagement in banking campaigns.
 
-## Live Deployment
+## Live Demo
 
 https://customer-campaign-performance-analysis.onrender.com/
 
+## Dashboard Preview
+
+![Dashboard Screenshot](assets/dashboard.png)
+
 ## Features
 
-- KPI metrics dashboard
-- profession-based response analysis
-- campaign outcome visualization
-- interactive business insights
-- deployed live web dashboard
+- KPI metrics dashboard  
+- profession-based response analysis  
+- campaign outcome visualization  
+- response trend insights  
+- production deployment with automatic GitHub updates  
 
 ## Tools Used
 
-- Python
-- Flask
-- Plotly
-- HTML
-- CSS
-- SQL
+- Python  
+- Flask  
+- Plotly  
+- HTML  
+- CSS  
+- SQL  
 
 ## Dataset
 
 Portuguese Bank Marketing Dataset
 
-## Run Locally
-
-python app.py
-
 ## Project Architecture
 
 Raw Dataset → Summary Generation → Flask Backend → Plotly Visualization → HTML/CSS Frontend → Render Deployment
+
+## Run Locally
+
+python app.py
